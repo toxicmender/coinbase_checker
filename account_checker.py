@@ -1,30 +1,26 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
+
 from coinbase.wallet.client import Client
 import json
 import creds
 import datetime
 
+current_datetime = datetime.datetime.now()
+print("[+] Current Datetime: {}".format(current_datetime))
+client = Client(creds.api_key, creds.api_secret)
+accounts = client.get_accounts()
+total_inr = 0.00
+for account in accounts["data"]:
+    balance = account["balance"]
+    price = client.get_sell_price(currency_pair = balance["currency"]+'-INR')
+    native_currency = float(str(balance["amount"])) * float(str(price["amount"]))
+    print("[+] You have {0} {1} valued {2} INR at {3} per {1}".format(balance["amount"],
+                                                                 balance["currency"],
+                                                                 native_currency,
+                                                                 price["amount"]))
+    total_inr += native_currency
+print("[+] Total inr worth is: {} ".format(float(total_inr)))
 
-def logger(date_time, total_euro_value):
-    f = open("log.csv", "a")
-    message = "%s,%f\n" %(date_time, total_euro_value)
-    f.write(message)
-    f.close()
-
-def main():
-    current_datetime = datetime.datetime.now()
-    print "[+] Current Datetime: %s" %(current_datetime)
-    client = Client(creds.api_key, creds.api_secret)
-    data = client.get_accounts()
-    total_euro_value = 0.00
-    for x in range(0,5):
-        currency_type = data[x]["balance"]["currency"]
-        currency_amount = data[x]["balance"]["amount"]
-        euros_amount = data[x]["native_balance"]["amount"]
-        print "[+] You have %s %s valued at %s euros" %(currency_amount, currency_type, euros_amount)
-        total_euro_value = total_euro_value + float(euros_amount)
-    print "[+] Total euro worth is: %f " %(float(total_euro_value))
-    logger(current_datetime, total_euro_value)
-
-if __name__ == "__main__":
-    main()
+with open("log.csv", "a") as f:
+     message = "{}, {}\n".format(current_datetime, total_inr)
+     f.write(message)
